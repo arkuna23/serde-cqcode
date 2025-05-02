@@ -232,8 +232,8 @@ impl<'de> CQDeserializer<'de> {
         }
 
         Ok(CQCodeModel {
-            r#type: Cow::Borrowed("text"),
-            data: VecDeque::from([("text", ModelValue::String(Cow::Owned(msg)))]),
+            cq_type: Cow::Borrowed("text"),
+            data: VecDeque::from([(Cow::Borrowed("text"), ModelValue::String(Cow::Owned(msg)))]),
         })
     }
 }

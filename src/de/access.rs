@@ -31,7 +31,7 @@ impl<'de> MapAccess<'de> for CQCodeAccess<'de> {
     {
         if self.first {
             self.first = false;
-            seed.deserialize("type".into_deserializer()).map(Some)
+            seed.deserialize("cq_type".into_deserializer()).map(Some)
         } else {
             let Some((key, value)) = self.code.data.pop_front() else {
                 return Ok(None);
@@ -48,7 +48,7 @@ impl<'de> MapAccess<'de> for CQCodeAccess<'de> {
         if let Some(value) = self.current.take() {
             seed.deserialize(value)
         } else {
-            seed.deserialize(self.code.r#type.clone().into_deserializer())
+            seed.deserialize(self.code.cq_type.clone().into_deserializer())
         }
     }
 }
@@ -77,9 +77,7 @@ impl<'a, 'de: 'a> MapAccess<'de> for CodeRaw<'a, 'de> {
         K: serde::de::DeserializeSeed<'de>,
     {
         match self.de.peek_char()? {
-            ']' => {
-                Ok(None)
-            }
+            ']' => Ok(None),
             ',' => {
                 self.de.next_char()?;
                 seed.deserialize(&mut *self.de).map(Some)
@@ -87,7 +85,7 @@ impl<'a, 'de: 'a> MapAccess<'de> for CodeRaw<'a, 'de> {
             _ => {
                 if self.first {
                     self.first = false;
-                    seed.deserialize("type".into_deserializer()).map(Some)
+                    seed.deserialize("cq_type".into_deserializer()).map(Some)
                 } else {
                     Err(Error::ExpectedCodeComma)
                 }
@@ -153,7 +151,7 @@ impl<'de> EnumAccess<'de> for CQCodeAccess<'de> {
         V: serde::de::DeserializeSeed<'de>,
     {
         let r = seed.deserialize(IntoDeserializer::<'de, Error>::into_deserializer(
-            self.code.r#type.clone(),
+            self.code.cq_type.clone(),
         ))?;
         Ok((r, self))
     }

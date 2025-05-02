@@ -1,4 +1,4 @@
-pub mod model;
+pub(crate) mod model;
 
 use std::{
     collections::HashMap,
@@ -46,7 +46,7 @@ impl Number {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CQCode {
-    pub r#type: String,
+    pub cq_type: String,
     #[serde(flatten)]
     pub data: HashMap<String, String>,
 }
@@ -54,7 +54,7 @@ pub struct CQCode {
 impl CQCode {
     pub fn new(ty: impl Into<String>) -> Self {
         CQCode {
-            r#type: ty.into(),
+            cq_type: ty.into(),
             data: HashMap::default(),
         }
     }
@@ -102,4 +102,17 @@ pub const fn escape_char(code: char) -> Option<&'static str> {
         ',' => Some("#44"),
         _ => None,
     }
+}
+
+pub fn escape_str(s: &str) -> String {
+    let mut out = String::new();
+    for ele in s.chars() {
+        if let Some(escaped) = escape_char(ele) {
+            out.push_str(escaped);
+        } else {
+            out.push(ele);
+        }
+    }
+
+    out
 }

@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::VecDeque};
 
-use serde::{forward_to_deserialize_any, Deserialize, Serialize};
+use serde::{de::Visitor, forward_to_deserialize_any, Deserialize, Serialize};
 
 use crate::{de::access::CQCodeAccess, Error};
 
@@ -14,6 +14,21 @@ pub enum ModelValue<'a> {
     String(Cow<'a, str>),
     Number(Number),
     CQCode(CQCodeModel<'a>),
+}
+
+impl<'de> ModelValue<'de> {
+    pub fn to_unexp(&'de self) -> serde::de::Unexpected<'de> {
+        use serde::de::Unexpected;
+        match *self {
+            ModelValue::Bool(b) => Unexpected::Bool(b),
+            ModelValue::String(ref cow) => Unexpected::Str(cow),
+            ModelValue::Number(number) => match number {
+                Number::Int(i) => Unexpected::Signed(i),
+                Number::Float(f) => Unexpected::Float(f),
+            },
+            ModelValue::CQCode(_) => Unexpected::Map,
+        }
+    }
 }
 
 impl<'de> serde::de::Deserializer<'de> for ModelValue<'de> {
@@ -60,14 +75,89 @@ impl<'de> serde::de::Deserializer<'de> for ModelValue<'de> {
     }
 }
 
-type CodeData<'a> = VecDeque<(&'a str, ModelValue<'a>)>;
+pub(crate) struct ValueVisitor;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, PartialOrd)]
+impl<'de> Visitor<'de> for ValueVisitor {
+    type Value = ModelValue<'de>;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(formatter, "a valid ModelValue")
+    }
+
+    fn visit_bool<E>(self, value: bool) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(ModelValue::Bool(value))
+    }
+
+    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(ModelValue::String(Cow::Borrowed(v)))
+    }
+
+    fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(ModelValue::Number(Number::Int(value)))
+    }
+
+    fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(ModelValue::Number(Number::Float(value)))
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        let mut cq_type = None;
+        let mut data = VecDeque::new();
+
+        while let Some((key, value)) = map.next_entry::<Cow<'de, str>, ModelValue<'de>>()? {
+            if key == "cq_type" {
+                cq_type = if let ModelValue::String(ty) = value {
+                    Some(ty)
+                } else {
+                    return Err(serde::de::Error::invalid_type(
+                        value.to_unexp(),
+                        &"a string for cq code type",
+                    ));
+                };
+            } else {
+                data.push_back((key, value));
+            }
+        }
+
+        let cq_type = cq_type.ok_or_else(|| serde::de::Error::missing_field("cq_type"))?;
+        Ok(ModelValue::CQCode(CQCodeModel { cq_type, data }))
+    }
+}
+
+type CodeData<'a> = VecDeque<(Cow<'a, str>, ModelValue<'a>)>;
+
+#[derive(Debug, Serialize, Clone, PartialEq, PartialOrd)]
 pub struct CQCodeModel<'a> {
     #[serde(borrow)]
-    pub r#type: Cow<'a, str>,
-    #[serde(flatten)]
+    pub cq_type: Cow<'a, str>,
     pub data: CodeData<'a>,
+}
+
+impl<'de> Deserialize<'de> for CQCodeModel<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let ModelValue::CQCode(map) = deserializer.deserialize_map(ValueVisitor)? else {
+            panic!("expected map")
+        };
+        Ok(map)
+    }
 }
 
 impl<'de> CQCodeModel<'de> {
