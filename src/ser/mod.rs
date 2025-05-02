@@ -32,4 +32,37 @@ mod test {
             .unwrap()
         )
     }
+
+    #[test]
+    fn test_enum_ser() {
+        use super::*;
+        use serde::*;
+
+        #[derive(Serialize, Deserialize, Debug)]
+        #[serde(rename_all = "lowercase")]
+        enum Segment {
+            Text { text: String },
+            Face { id: u32 },
+            Image { file: String },
+            At { qq: u64 },
+            Emoji { id: u32 },
+        }
+
+        let input =
+            "你好[CQ:face,id=1][CQ:image,file=example.jpg][CQ:at,qq=123456][CQ:emoji,id=128512]";
+        let expected = vec![
+            Segment::Text {
+                text: "你好".to_string(),
+            },
+            Segment::Face { id: 1 },
+            Segment::Image {
+                file: "example.jpg".to_string(),
+            },
+            Segment::At { qq: 123456 },
+            Segment::Emoji { id: 128512 },
+        ];
+
+        let serialized = to_string(&expected).unwrap();
+        assert_eq!(serialized, input);
+    }
 }
