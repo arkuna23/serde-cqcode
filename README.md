@@ -1,61 +1,78 @@
 # serde-cqcode
 
-`serde-cqcode` is a Rust library designed to serialize and deserialize CQ codes, which are commonly used in messaging applications to represent rich media content like images, emojis, and mentions. This library leverages the `serde` framework to provide a seamless way to handle CQ codes in Rust applications.
+[English](./README.en.md) | 中文
 
-## Features
+`serde-cqcode` 是一个 Rust 库，旨在序列化和反序列化 CQ 码，这些码通常用于消息应用中以表示丰富的媒体内容，如图像、表情符号和提及。该库利用 `serde` 框架提供了一种在 Rust 应用中处理 CQ 码的无缝方式。
 
-- **Serialization and Deserialization**: Easily convert CQ codes to and from strings using Serde.
-- **Support for Common CQ Code Types**: Includes support for text, face, image, at, and emoji CQ codes.
-- **Custom Error Handling**: Provides detailed error messages for unsupported types and parsing errors.
+## 特性
 
-## Installation
+- **序列化和反序列化**：使用 Serde 轻松地将 CQ 码转换为字符串或从字符串转换。
+- **灵活的数据表示**：允许将 CQ 码表示为结构化数据，便于操作和检查。
+- **与 Serde 集成**：与 Serde 框架无缝集成，支持使用熟悉的序列化和反序列化模式。
 
-Add `serde-cqcode` to your `Cargo.toml`:
+## 安装
+
+在你的 `Cargo.toml` 中添加 `serde-cqcode`：
 
 ```toml
 [dependencies]
-serde-cqcode = "0.1"
+serde-cqcode = { git = "https://github.com/arkuna23/serde-cqcode.git" }
 
 #...
 ```
 
+## 用法
 
-## Usage
-
-Here's a basic example of how to use `serde-cqcode` to serialize and deserialize CQ codes:
+以下是如何使用 `serde-cqcode` 序列化和反序列化 CQ 码的基本示例：
 
 ```rust
 use serde_cqcode::{from_str, to_string, CQCode};
 
 fn main() {
-    let input = "你好[CQ:face,id=1][CQ:image,file=example.jpg][CQ:at,qq=123456][CQ:emoji,id=128512]";
-    let codes: Vec<CQCode> = from_str(input).unwrap();
-
-    for code in &codes {
-        println!("{:?}", code);
+    #[derive(Serialize, Deserialize, Debug)]
+    #[serde(rename_all = "lowercase")]
+    enum Segment {
+        Text { text: String },
+        Face { id: u32 },
+        Image { file: String },
+        At { qq: u64 },
+        Emoji { id: u32 },
     }
 
-    let output = to_string(&codes).unwrap();
-    println!("{}", output);
+    let input =
+        "你好[CQ:face,id=1][CQ:image,file=example.jpg][CQ:at,qq=123456][CQ:emoji,id=128512]";
+    let expected = vec![
+        Segment::Text {
+            text: "你好".to_string(),
+        },
+        Segment::Face { id: 1 },
+        Segment::Image {
+            file: "example.jpg".to_string(),
+        },
+        Segment::At { qq: 123456 },
+        Segment::Emoji { id: 128512 },
+    ];
+
+    let deserialized: Vec<Segment> = from_str(input).unwrap();
+    assert_eq!(deserialized, expected);
+
+    let serialized = to_string(&expected).unwrap();
+    assert_eq!(serialized, input);
 }
 ```
 
-## Error Handling
+## 贡献
 
-`serde-cqcode` provides a custom `Error` type that implements `serde::de::Error` and `serde::ser::Error`. This allows for detailed error messages when serialization or deserialization fails.
+欢迎贡献！请随时提交拉取请求或打开问题。
 
-## Contributing
+## 免责声明
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
+此项目仅用于学习目的。**不建议**在生产环境中使用。
 
-## Disclaimer
+## 许可证
 
-This project is intended for learning purposes only. It is **not recommended** for use in production environments.
+此项目根据 MIT 许可证授权。
 
-## License
+## 联系
 
-This project is licensed under the MIT License.
-
-## Contact
-
-For any questions or suggestions, please open an issue on the GitHub repository.
+如有任何问题或建议，请在 GitHub 仓库上打开问题。

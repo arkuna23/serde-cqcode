@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::VecDeque};
 
 use crate::{data::*, Result, *};
 use model::*;
-use serde::{forward_to_deserialize_any, Deserialize};
+use serde::forward_to_deserialize_any;
 
 use super::access::*;
 
@@ -486,7 +486,19 @@ impl<'de> serde::de::Deserializer<'de> for &mut CQDeserializer<'de> {
     where
         V: serde::de::Visitor<'de>,
     {
-        visitor.visit_enum(CQCodeModel::deserialize(self)?.into_access())
+        if self.peek_char()? == '[' {
+            self.next_char()?;
+            let result = visitor.visit_enum(CodeRaw::create(&mut *self)?)?;
+            if self.next_char()? != ']' {
+                Err(Error::ExpectedCodeEnd)
+            } else {
+                Ok(result)
+            }
+        } else if let Some('[') | None = self.peek_delimiter() {
+            visitor.visit_enum(self.parse_text_msg()?.into_access())
+        } else {
+            Err(Error::ExpectedCodeStart)
+        }
     }
 
     fn deserialize_identifier<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>

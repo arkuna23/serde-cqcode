@@ -1,5 +1,5 @@
 use data::model::*;
-use serde::de::{EnumAccess, IntoDeserializer, SeqAccess, VariantAccess};
+use serde::de::{EnumAccess, Error as DeError, IntoDeserializer, SeqAccess, VariantAccess};
 
 use super::core::CQDeserializer;
 use serde::de::MapAccess;
@@ -101,6 +101,62 @@ impl<'a, 'de: 'a> MapAccess<'de> for CodeRaw<'a, 'de> {
             '=' | ':' => seed.deserialize(&mut *self.de),
             _ => Err(Error::ExpectedCodeColon),
         }
+    }
+}
+
+impl<'de> EnumAccess<'de> for CodeRaw<'_, 'de> {
+    type Error = Error;
+
+    type Variant = Self;
+
+    fn variant_seed<V>(
+        mut self,
+        seed: V,
+    ) -> std::result::Result<(V::Value, Self::Variant), Self::Error>
+    where
+        V: serde::de::DeserializeSeed<'de>,
+    {
+        Ok((
+            self.next_value_seed(seed)?,
+            self,
+        ))
+    }
+}
+
+impl<'de> VariantAccess<'de> for CodeRaw<'_, 'de> {
+    type Error = Error;
+
+    fn unit_variant(self) -> std::result::Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn newtype_variant_seed<T>(self, seed: T) -> std::result::Result<T::Value, Self::Error>
+    where
+        T: serde::de::DeserializeSeed<'de>,
+    {
+        seed.deserialize(self.de)
+    }
+
+    fn tuple_variant<V>(
+        self,
+        _len: usize,
+        _visitor: V,
+    ) -> std::result::Result<V::Value, Self::Error>
+    where
+        V: serde::de::Visitor<'de>,
+    {
+        Err(Error::custom("not supported"))
+    }
+
+    fn struct_variant<V>(
+        self,
+        _fields: &'static [&'static str],
+        visitor: V,
+    ) -> std::result::Result<V::Value, Self::Error>
+    where
+        V: serde::de::Visitor<'de>,
+    {
+        visitor.visit_map(self)
     }
 }
 
