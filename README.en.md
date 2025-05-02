@@ -4,6 +4,8 @@ English | [中文](./README.md)
 
 `serde-cqcode` is a Rust library designed to serialize and deserialize CQ codes, which are commonly used in messaging applications to represent rich media content like images, emojis, and mentions. This library leverages the `serde` framework to provide a seamless way to handle CQ codes in Rust applications.
 
+**WIP (Work In Progress)**
+
 ## Features
 
 - **Serialization and Deserialization**: Easily convert CQ codes to and from strings using Serde.
