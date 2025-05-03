@@ -1,10 +1,13 @@
 use crate::*;
+use data::escape_char;
 use ser::util::{NewtypeSer, StrSerializer};
 use serde::{
-    de::Error as DeError, ser::{
+    de::Error as DeError,
+    ser::{
         SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
         SerializeTupleStruct, SerializeTupleVariant,
-    }, Serializer
+    },
+    Serializer,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -16,6 +19,16 @@ impl CQSerializer {
     fn append_value_display(&mut self, dis: impl AsRef<str>) {
         self.output.push('=');
         self.output.push_str(dis.as_ref());
+    }
+
+    fn push_char(&mut self, c: char) {
+        if let Some(code) = escape_char(c) {
+            self.output.push('&');
+            self.output.push_str(code);
+            self.output.push(';');
+        } else {
+            self.output.push(c);
+        }
     }
 }
 
@@ -168,7 +181,6 @@ impl SerializeMap for MapSerializer<'_> {
     }
 
     fn end(self) -> std::result::Result<Self::Ok, Self::Error> {
-
         let (idx, ty) = self
             .seeds
             .iter()
@@ -331,12 +343,12 @@ impl<'a> Serializer for &'a mut CQSerializer {
     }
 
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
-        self.output.push(v);
+        self.push_char(v);
         Ok(())
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        self.output.push_str(v);
+        v.chars().for_each(|c| self.push_char(c));
         Ok(())
     }
 
