@@ -54,6 +54,7 @@ impl Number {
 ///   associated with the CQCode.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CQCode {
+    #[serde(rename = "$type")]
     pub cq_type: String,
     #[serde(flatten)]
     pub data: HashMap<String, String>,

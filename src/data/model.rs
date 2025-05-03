@@ -120,7 +120,7 @@ impl<'de> Visitor<'de> for ValueVisitor {
         let mut data = VecDeque::new();
 
         while let Some((key, value)) = map.next_entry::<Cow<'de, str>, ModelValue<'de>>()? {
-            if key == "cq_type" {
+            if key == "$type" {
                 cq_type = if let ModelValue::String(ty) = value {
                     Some(ty)
                 } else {
@@ -134,7 +134,7 @@ impl<'de> Visitor<'de> for ValueVisitor {
             }
         }
 
-        let cq_type = cq_type.ok_or_else(|| serde::de::Error::missing_field("cq_type"))?;
+        let cq_type = cq_type.ok_or_else(|| serde::de::Error::missing_field("$type"))?;
         Ok(ModelValue::CQCode(CQCodeModel { cq_type, data }))
     }
 }

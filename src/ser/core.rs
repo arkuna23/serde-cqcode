@@ -189,9 +189,9 @@ impl SerializeMap for MapSerializer<'_> {
             .seeds
             .iter()
             .enumerate()
-            .find(|r| r.1 .0 == "cq_type")
+            .find(|r| r.1 .0 == "$type")
             .map(|r| (r.0, r.1 .1.as_deref().unwrap()))
-            .ok_or_else(|| Error::missing_field("cq_type"))?;
+            .ok_or_else(|| Error::missing_field("$type"))?;
         let mut st = StructSerializer::new(ty, self.ser);
         for (i, (key, value)) in self.seeds.into_iter().enumerate() {
             if i != idx {

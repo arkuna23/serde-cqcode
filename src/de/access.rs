@@ -31,7 +31,7 @@ impl<'de> MapAccess<'de> for CQCodeAccess<'de> {
     {
         if self.first {
             self.first = false;
-            seed.deserialize("cq_type".into_deserializer()).map(Some)
+            seed.deserialize("$type".into_deserializer()).map(Some)
         } else {
             let Some((key, value)) = self.code.data.pop_front() else {
                 return Ok(None);
@@ -85,7 +85,7 @@ impl<'a, 'de: 'a> MapAccess<'de> for CodeRaw<'a, 'de> {
             _ => {
                 if self.first {
                     self.first = false;
-                    seed.deserialize("cq_type".into_deserializer()).map(Some)
+                    seed.deserialize("$type".into_deserializer()).map(Some)
                 } else {
                     Err(Error::ExpectedCodeComma)
                 }
