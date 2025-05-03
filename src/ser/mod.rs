@@ -21,9 +21,9 @@ mod test {
         use crate::data::CQCode;
 
         assert_eq!(
-            "你好[CQ:face,id=1][CQ:image,file=example.jpg][CQ:at,qq=123456][CQ:emoji,id=128512]",
+            "&#91;你好&#93;[CQ:face,id=1][CQ:image,file=example.jpg][CQ:at,qq=123456][CQ:emoji,id=128512]",
             to_string(&[
-                CQCode::from(("text", [("text", "你好")])),
+                CQCode::from(("text", [("text", "[你好]")])),
                 CQCode::from(("face", [("id", "1")])),
                 CQCode::from(("image", [("file", "example.jpg")])),
                 CQCode::from(("at", [("qq", "123456")])),
@@ -49,10 +49,10 @@ mod test {
         }
 
         let input =
-            "你好[CQ:face,id=1][CQ:image,file=example.jpg][CQ:at,qq=123456][CQ:emoji,id=128512]";
+            "&#91;你好&#93;[CQ:face,id=1][CQ:image,file=example.jpg][CQ:at,qq=123456][CQ:emoji,id=128512]";
         let expected = vec![
             Segment::Text {
-                text: "你好".to_string(),
+                text: "[你好]".to_string(),
             },
             Segment::Face { id: 1 },
             Segment::Image {
