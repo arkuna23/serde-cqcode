@@ -7,11 +7,21 @@ use crate::Result;
 pub(crate) mod core;
 pub(crate) mod util;
 
+/// Serializes a given value into a CQCode formatted string.
+///
+/// # Arguments
+///
+/// * `value` - A reference to the value that implements the `Serialize` trait.
+///
+/// # Returns
+///
+/// * `Result<String>` - A result containing the serialized string on success, or an error if serialization fails.
 pub fn to_string<T: Serialize>(value: &T) -> Result<String> {
     let mut ser = CQSerializer::default();
     value.serialize(&mut ser)?;
-    Ok(ser.output)
+    Ok(ser.finish())
 }
+
 
 mod test {
 

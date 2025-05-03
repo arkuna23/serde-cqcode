@@ -30,6 +30,10 @@ impl CQSerializer {
             self.output.push(c);
         }
     }
+
+    pub fn finish(self) -> String {
+        self.output
+    }
 }
 
 #[derive(Debug)]

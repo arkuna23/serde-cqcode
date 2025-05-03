@@ -7,6 +7,20 @@ use serde::Deserialize;
 
 use crate::Result;
 
+/// Deserializes a string slice into a data structure of type `T`.
+///
+/// # Arguments
+///
+/// * `input` - A string slice that holds the data to be deserialized.
+///
+/// # Returns
+///
+/// * `Result<T>` - Returns a result containing the deserialized data structure of type `T` on success,
+///   or an error if the deserialization fails.
+///
+/// # Type Parameters
+///
+/// * `T` - The type of the data structure to deserialize into. It must implement the `Deserialize` trait.
 pub fn from_str<'de, T: Deserialize<'de>>(input: &'de str) -> Result<T> {
     Deserialize::deserialize(&mut CQDeserializer::new(input))
 }

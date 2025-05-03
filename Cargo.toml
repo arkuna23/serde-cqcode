@@ -2,6 +2,12 @@
 name = "serde-cqcode"
 version = "0.1.0"
 edition = "2021"
+description = "Rust library designed to serialize and deserialize CQ codes."
+license = "MIT"
+authors = ["Arkuna"]
+repository = "https://github.com/arkuna23/serde-cqcode"
+readme = "README.en.md"
+keywords = ["onebot"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

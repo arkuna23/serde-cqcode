@@ -44,6 +44,14 @@ impl Number {
     }
 }
 
+/// Represents a CQCode, which is a structured data type used for encoding
+/// and decoding messages with a specific type and associated data.
+/// 
+/// # Fields
+/// 
+/// * `cq_type` - A string representing the type of the CQCode.
+/// * `data` - A `HashMap` containing key-value pairs of additional data
+///   associated with the CQCode.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CQCode {
     pub cq_type: String,
